@@ -9,14 +9,14 @@ export async function GET() {
   const customers = CUSTOMERS.map((c) => ({
     customerId: c.customerId,
     name: c.name,
-    email: c.email,
     loyaltyTier: c.loyaltyTier,
     refundsLast90Days: c.refundsLast90Days,
     orders: c.orders.map((o) => ({
       orderId: o.orderId,
       total: o.total,
       deliveredAt: o.deliveredAt,
-      items: o.items.map((i) => i.name).join(", "),
+      refunded: o.refunded,
+      items: o.items.map((i) => ({ name: i.name, category: i.category })),
     })),
   }));
   return Response.json({ customers, conversations: getConversations() });

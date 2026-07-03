@@ -2,34 +2,40 @@
 
 import { useEffect, useState } from "react";
 
+interface OrderRow {
+  orderId: string; total: number; deliveredAt: string | null; refunded: boolean;
+  items: { name: string; category: string }[];
+}
 interface Customer {
-  customerId: string; name: string; loyaltyTier: string; refundsLast90Days: number;
-  orders: { orderId: string; total: number; deliveredAt: string | null; items: string }[];
+  customerId: string; name: string; loyaltyTier: string; refundsLast90Days: number; orders: OrderRow[];
 }
 interface Conversation {
   id: string; channel: "text" | "voice"; customerName: string; orderId?: string;
   reason?: string; decision?: string; amount?: number; createdAt: number;
 }
 
-const STATUS: Record<string, { label: string; cls: string }> = {
-  approve: { label: "Approved", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  deny: { label: "Denied", cls: "bg-rose-50 text-rose-700 border-rose-200" },
-  escalate: { label: "Escalated", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  pending: { label: "In progress", cls: "bg-slate-100 text-slate-500 border-slate-200" },
+const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+const CAT_LABEL: Record<string, string> = { final_sale: "Final sale", digital: "Digital", standard: "Standard" };
+
+// Which policy rules bite this order — shown as small tags so you can read
+// approve/deny/escalate straight off the order data.
+function signals(o: OrderRow): { t: string; tone: string }[] {
+  const tags: { t: string; tone: string }[] = [];
+  const nonRef = o.items.filter((i) => i.category !== "standard");
+  if (nonRef.length) tags.push({ t: nonRef.map((i) => CAT_LABEL[i.category]).join(" · ") + " · non-refundable", tone: "rose" });
+  if (o.refunded) tags.push({ t: "Already refunded", tone: "rose" });
+  if (o.total > 500) tags.push({ t: "Over $500 → escalate", tone: "amber" });
+  return tags;
+}
+
+const TONE: Record<string, string> = {
+  rose: "border-rose-200 bg-rose-50 text-rose-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-700",
 };
-
-function Badge({ decision }: { decision?: string }) {
-  const s = STATUS[decision ?? "pending"] ?? STATUS.pending;
-  return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${s.cls}`}>{s.label}</span>;
-}
-
-function ago(ts: number): string {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  return `${Math.floor(m / 60)}h ago`;
-}
+const DEC_TXT: Record<string, string> = {
+  approve: "text-emerald-600", deny: "text-rose-600", escalate: "text-amber-600", pending: "text-slate-400",
+};
+const ago = (ts: number) => { const s = Math.floor((Date.now() - ts) / 1000); return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m` : `${Math.floor(s / 3600)}h`; };
 
 export function CrmPanel() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -49,80 +55,83 @@ export function CrmPanel() {
     return () => { alive = false; clearInterval(iv); };
   }, []);
 
-  const total = customers.length + conversations.length;
-  const count = (d: string) => conversations.filter((c) => c.decision === d).length;
+  const rows = customers.flatMap((c) => c.orders.map((o) => ({ c, o })));
 
   return (
     <section className="flex min-h-0 flex-col bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-6 py-2.5">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          CRM · <span className="text-[#1D2333]">{total}</span> records
-        </span>
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">{customers.length} accounts</span>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-emerald-700">{count("approve")} approved</span>
-          <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-rose-700">{count("deny")} denied</span>
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-700">{count("escalate")} escalated</span>
-        </div>
+      {/* Orders measured against policy */}
+      <div className="flex items-center justify-between border-b border-slate-200 px-6 py-2.5">
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Customers &amp; orders</span>
+        <span className="text-[11px] text-slate-400">{customers.length} customers · {rows.length} orders</span>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2">
-        {/* Accounts */}
-        <div className="min-h-0 overflow-y-auto border-r border-slate-200">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-white">
-              <tr className="border-b border-slate-200 text-left text-[10px] uppercase tracking-wide text-slate-400">
-                <th className="px-4 py-1.5 font-medium">Customer</th>
-                <th className="px-2 py-1.5 font-medium">Orders</th>
-                <th className="px-4 py-1.5 text-right font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((c) => (
-                <tr key={c.customerId} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-4 py-1.5 font-medium text-[#1D2333]">{c.name}</td>
-                  <td className="px-2 py-1.5 text-slate-500">{c.orders.map((o) => o.orderId).join(", ")}</td>
-                  <td className="px-4 py-1.5 text-right">
-                    {c.refundsLast90Days > 3
-                      ? <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">⚑ Flagged · {c.refundsLast90Days} refunds</span>
-                      : <span className="capitalize text-slate-400">{c.loyaltyTier}</span>}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <table className="w-full text-xs">
+          <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_#e2e8f0]">
+            <tr className="text-left text-[10px] uppercase tracking-wide text-slate-400">
+              <th className="px-6 py-2 font-medium">Customer</th>
+              <th className="px-2 py-2 font-medium">Order</th>
+              <th className="px-2 py-2 font-medium">Item</th>
+              <th className="px-2 py-2 text-right font-medium">Amount</th>
+              <th className="px-2 py-2 font-medium">Delivered</th>
+              <th className="px-6 py-2 font-medium">Policy signals</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ c, o }) => {
+              const flagged = c.refundsLast90Days > 3;
+              const d = o.deliveredAt ? daysSince(o.deliveredAt) : null;
+              const outWindow = d !== null && d > 30;
+              const tags = signals(o);
+              return (
+                <tr key={o.orderId} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="px-6 py-1.5">
+                    <span className="font-medium text-[#1D2333]">{c.name}</span>
+                    {flagged && <span className="ml-1.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">⚑ {c.refundsLast90Days}× / 90d</span>}
+                  </td>
+                  <td className="px-2 py-1.5 text-slate-500">{o.orderId}</td>
+                  <td className="px-2 py-1.5 text-slate-600">{o.items.map((i) => i.name).join(", ")}</td>
+                  <td className={"px-2 py-1.5 text-right tabular-nums " + (o.total > 500 ? "font-semibold text-amber-600" : "text-slate-600")}>${o.total.toFixed(2)}</td>
+                  <td className={"px-2 py-1.5 " + (o.deliveredAt === null ? "text-rose-600" : outWindow ? "text-rose-600" : "text-slate-500")}>
+                    {o.deliveredAt === null ? "Not delivered" : `${d}d ago`}
+                  </td>
+                  <td className="px-6 py-1.5">
+                    <div className="flex flex-wrap gap-1">
+                      {outWindow && <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${TONE.rose}`}>Outside 30-day window</span>}
+                      {tags.map((t) => <span key={t.t} className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${TONE[t.tone]}`}>{t.t}</span>)}
+                    </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Conversations (live) */}
-        <div className="min-h-0 overflow-y-auto">
-          {conversations.length === 0 ? (
-            <div className="mt-6 text-center text-xs text-slate-400">Chat or call in — records appear here in real time.</div>
-          ) : (
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-slate-200 text-left text-[10px] uppercase tracking-wide text-slate-400">
-                  <th className="px-4 py-1.5 font-medium">Customer</th>
-                  <th className="px-2 py-1.5 font-medium">Request</th>
-                  <th className="px-2 py-1.5 font-medium">Status</th>
-                  <th className="px-4 py-1.5 text-right font-medium">When</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conversations.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-4 py-1.5">
-                      <span className="mr-1">{c.channel === "voice" ? "📞" : "💬"}</span>
-                      <span className="font-medium text-[#1D2333]">{c.customerName}</span>
-                    </td>
-                    <td className="px-2 py-1.5 text-slate-500">{c.orderId}{c.reason ? ` · ${c.reason}` : ""}{c.amount ? ` · $${c.amount.toFixed(2)}` : ""}</td>
-                    <td className="px-2 py-1.5"><Badge decision={c.decision} /></td>
-                    <td className="px-4 py-1.5 text-right text-slate-400">{ago(c.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+      {/* Live conversation log (every text/voice/phone interaction is stored) */}
+      <div className="max-h-40 shrink-0 overflow-y-auto border-t border-slate-200">
+        <div className="sticky top-0 flex items-center justify-between bg-slate-50 px-6 py-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Conversations · live</span>
+          <span className="text-[10px] text-slate-400">{conversations.length} logged</span>
         </div>
+        {conversations.length === 0 ? (
+          <div className="px-6 py-3 text-xs text-slate-400">Chat or call in — every interaction is logged here in real time.</div>
+        ) : (
+          <ul className="px-6 py-1">
+            {conversations.map((c) => (
+              <li key={c.id} className="flex items-center gap-2 py-1 text-xs">
+                <span>{c.channel === "voice" ? "📞" : "💬"}</span>
+                <span className="font-medium text-[#1D2333]">{c.customerName}</span>
+                <span className="text-slate-500">{c.orderId}{c.reason ? ` · ${c.reason}` : ""}</span>
+                <span className={"font-semibold " + (DEC_TXT[c.decision ?? "pending"] ?? "text-slate-400")}>
+                  {(c.decision ?? "pending") === "pending" ? "In progress" : (c.decision![0].toUpperCase() + c.decision!.slice(1))}
+                  {c.amount ? ` $${c.amount.toFixed(2)}` : ""}
+                </span>
+                <span className="ml-auto text-slate-400">{ago(c.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
