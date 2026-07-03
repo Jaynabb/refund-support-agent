@@ -176,6 +176,17 @@ export function findCustomerById(customerId: string): Customer | undefined {
   return CUSTOMERS.find((c) => c.customerId.toUpperCase() === id);
 }
 
+// Match on full name or first name (case-insensitive). Returns all matches so the
+// tool can disambiguate if a name is shared.
+export function findCustomersByName(name: string): Customer[] {
+  const q = name.trim().toLowerCase();
+  if (!q) return [];
+  return CUSTOMERS.filter((c) => {
+    const full = c.name.toLowerCase();
+    return full === q || full.split(" ")[0] === q || full.includes(q);
+  });
+}
+
 export function findOrder(orderId: string): { customer: Customer; order: Customer["orders"][number] } | undefined {
   const id = orderId.trim().toUpperCase();
   for (const customer of CUSTOMERS) {

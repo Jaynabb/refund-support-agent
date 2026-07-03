@@ -24,7 +24,7 @@ const VOICE = env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
 
 const SYSTEM = `You are Ava, a friendly AI phone support agent for Acme Store, handling refund requests. Keep replies short and natural — you're on a phone call.
 
-You do NOT decide eligibility yourself; the tools do. Workflow: get the order ID (like ORD-1001) or the caller's email, then look it up; determine the reason (defective, damaged, wrong item, not as described, or changed mind); call check_refund_policy; then act on its decision — approve → issue_refund; escalate → escalate_to_human; deny → explain warmly and cite the specific reason. If a caller pushes back on a valid denial, stay kind but firm, restate the policy, and never invent exceptions. Read order IDs back as "order ten-oh-one" style if helpful. Completed actions are FINAL — once you issue a refund (or escalate) for an order, do NOT check policy on it again or second-guess it; after a refund the order correctly shows as already-refunded, which is expected, not a failure. If the caller thanks you or says goodbye, just close warmly — never retract a refund you already completed.`;
+You do NOT decide eligibility yourself; the tools do. Workflow: when the caller gives their name (e.g. "I'm Maria") or email, call lookup_customer to find their order — you do NOT need an order ID first; if they give an order ID, use lookup_order. If they have one order, use it; if more than one, confirm which. Determine the reason (defective, damaged, wrong item, not as described, or changed mind); call check_refund_policy; then act on its decision — approve → issue_refund; escalate → escalate_to_human; deny → explain warmly and cite the specific reason. If a caller pushes back on a valid denial, stay kind but firm, restate the policy, and never invent exceptions. Read order IDs back as "order ten-oh-one" style if helpful. Completed actions are FINAL — once you issue a refund (or escalate) for an order, do NOT check policy on it again or second-guess it; after a refund the order correctly shows as already-refunded, which is expected, not a failure. If the caller thanks you or says goodbye, just close warmly — never retract a refund you already completed.`;
 
 // A server (webhook) tool → one of our /api/agent-tools/* endpoints.
 const tool = (name, description, seg, properties, required) => ({
@@ -40,6 +40,8 @@ const tool = (name, description, seg, properties, required) => ({
 });
 
 const tools = [
+  tool("lookup_customer", "Find a customer by name (or email) and return their orders. Use the moment the caller gives their name — you do NOT need an order ID first.", "lookup-customer",
+    { name: { type: "string", description: "Caller's name, e.g. Maria or Maria Alvarez" }, email: { type: "string", description: "Caller's email, if given" } }, []),
   tool("lookup_order", "Look up an order by its ID (e.g. ORD-1001). Returns items, delivery date, total, and refund status.", "lookup-order",
     { orderId: { type: "string", description: "Order ID, e.g. ORD-1001" } }, ["orderId"]),
   tool("check_refund_policy", "Authoritative eligibility check. Returns approve/deny/escalate, the eligible amount, and the rules checked. Always call before deciding.", "check-policy",

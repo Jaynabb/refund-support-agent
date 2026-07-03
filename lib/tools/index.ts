@@ -1,6 +1,6 @@
 import type { Anthropic } from "@anthropic-ai/sdk";
 import type { RefundReason } from "@/lib/types";
-import { findCustomerByEmail, findCustomerById, findOrder } from "@/lib/data/crm";
+import { findCustomerByEmail, findCustomerById, findCustomersByName, findOrder } from "@/lib/data/crm";
 import { evaluateRefund } from "@/lib/policy/engine";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,18 +48,26 @@ export const TOOLS: Record<string, Tool> = {
     definition: {
       name: "lookup_customer",
       description:
-        "Find a customer by email address or customer ID. Returns their profile and a list of their orders. Use this when the customer identifies themselves but you don't have an order ID yet.",
+        "Find a customer by NAME, email address, or customer ID, and return their profile and orders. Use this the moment a customer identifies themselves (e.g. \"my name is Maria\") — you do NOT need an order ID first.",
       input_schema: {
         type: "object",
         properties: {
+          name: { type: "string", description: "Customer's name (first name or full name), e.g. \"Maria\" or \"Maria Alvarez\"" },
           email: { type: "string", description: "Customer email address" },
           customerId: { type: "string", description: "Customer ID, e.g. C001" },
         },
       },
     },
-    handler: async ({ email, customerId }) => {
-      const customer = email ? findCustomerByEmail(String(email)) : customerId ? findCustomerById(String(customerId)) : undefined;
-      if (!customer) return { found: false, message: "No customer found with that identifier." };
+    handler: async ({ email, customerId, name }) => {
+      let customer = email ? findCustomerByEmail(String(email)) : customerId ? findCustomerById(String(customerId)) : undefined;
+      if (!customer && name) {
+        const matches = findCustomersByName(String(name));
+        if (matches.length === 1) customer = matches[0];
+        else if (matches.length > 1) {
+          return { found: false, ambiguous: true, matches: matches.map((c) => c.name), message: `Multiple customers match "${name}". Ask for the order ID or email to confirm which one.` };
+        }
+      }
+      if (!customer) return { found: false, message: "No customer found with that name, email, or ID." };
       return {
         found: true,
         customerId: customer.customerId,
