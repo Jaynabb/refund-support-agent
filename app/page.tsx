@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentEvent, ChatMessage } from "@/lib/types";
 import { ReasoningPanel } from "@/components/ReasoningPanel";
 import { ChatPanel } from "@/components/ChatPanel";
@@ -91,6 +91,19 @@ export default function Home() {
     }
   }, [messages, speak]);
 
+  // Live feed from phone-call server tools — the on-screen panel updates in real
+  // time while you're on the phone with Ava.
+  const [phoneConnected, setPhoneConnected] = useState(false);
+  useEffect(() => {
+    const es = new EventSource("/api/live");
+    es.onopen = () => setPhoneConnected(true);
+    es.onmessage = (m) => {
+      try { const evt = JSON.parse(m.data) as AgentEvent; if (evt?.type) setEvents((prev) => [...prev, evt]); } catch { /* ignore */ }
+    };
+    es.onerror = () => setPhoneConnected(false);
+    return () => es.close();
+  }, []);
+
   const reset = () => { setMessages([]); setEvents([]); audioRef.current?.pause(); };
   const toggleVoice = () => { const v = !voiceMode; setVoiceMode(v); voiceRef.current = v; };
 
@@ -105,6 +118,11 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <span className={"flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs " +
+            (phoneConnected ? "border-emerald-600/50 text-emerald-300" : "border-slate-700 text-slate-500")}>
+            <span className={"h-1.5 w-1.5 rounded-full " + (phoneConnected ? "bg-emerald-400" : "bg-slate-600")} />
+            📞 Live
+          </span>
           <button onClick={toggleVoice}
             className={"rounded-md border px-3 py-1.5 text-xs font-medium transition-colors " +
               (voiceMode ? "border-emerald-500 bg-emerald-500/15 text-emerald-300" : "border-slate-700 text-slate-300 hover:bg-slate-800")}>
