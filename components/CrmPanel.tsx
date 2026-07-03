@@ -64,7 +64,6 @@ export function CrmPanel() {
           </thead>
           <tbody>
             {rows.map(({ c, o }) => {
-              const flagged = c.refundsLast90Days > 3;
               const d = o.deliveredAt ? daysSince(o.deliveredAt) : null;
               const outWindow = d !== null && d > 30;
               const cats = [...new Set(o.items.map((i) => i.category))];
@@ -72,7 +71,6 @@ export function CrmPanel() {
                 <tr key={o.orderId} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="px-6 py-1.5">
                     <span className="font-medium text-[#1D2333]">{c.name}</span>
-                    {flagged && <span className="ml-1.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">⚑ {c.refundsLast90Days}× / 90d</span>}
                   </td>
                   <td className="px-2 py-1.5 text-slate-500">{o.orderId}</td>
                   <td className="px-2 py-1.5 text-slate-600">{o.items.map((i) => i.name).join(", ")}</td>

@@ -5,18 +5,17 @@ import type {
 // ─────────────────────────────────────────────────────────────────────────────
 // Deterministic refund policy engine — the agent's source of truth.
 //
-// Intentionally small: five clear gates. The LLM gathers info and explains; this
+// Intentionally small and unambiguous. The LLM gathers info and explains; this
 // decides, and returns every rule it checked (shown in the reasoning panel).
 //   Deny:     not delivered / outside 30-day window / already refunded /
 //             no refundable items.
-//   Escalate: amount over the $500 auto-approve cap / customer flagged for abuse.
+//   Escalate: amount over the $500 auto-approve cap.
 //   Approve:  otherwise (partial when a mix of refundable + non-refundable items).
 // Mirrors lib/data/policy.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const RETURN_WINDOW_DAYS = 30;
 const AUTO_APPROVE_CAP = 500;
-const FRAUD_REFUND_THRESHOLD = 3;
 
 const NON_REFUNDABLE = new Set(["final_sale", "digital"]);
 
@@ -28,7 +27,7 @@ const money = (n: number) => `$${n.toFixed(2)}`;
 export function evaluateRefund(
   order: Order,
   _reason: RefundReason,
-  refundsLast90Days: number,
+  _refundsLast90Days: number,
 ): PolicyEvaluation {
   const rules: PolicyRuleResult[] = [];
   const eligibleItems: OrderItem[] = order.items.filter((i) => !NON_REFUNDABLE.has(i.category));
@@ -63,13 +62,7 @@ export function evaluateRefund(
       : `Every item is non-refundable (${ineligibleNames.join(", ")}) — policy §2.`,
   });
 
-  // ── Escalation signals ────────────────────────────────────────────────────────
-  const flagged = refundsLast90Days > FRAUD_REFUND_THRESHOLD;
-  rules.push({
-    rule: "fraud_review", passed: !flagged,
-    detail: flagged ? `${refundsLast90Days} refunds in 90 days (> ${FRAUD_REFUND_THRESHOLD}) — escalate for review (policy §5).` : `Refund history normal (${refundsLast90Days} in 90 days).`,
-  });
-
+  // ── Escalation signal ─────────────────────────────────────────────────────────
   const overCap = eligibleAmount > AUTO_APPROVE_CAP;
   rules.push({
     rule: "amount_authority", passed: !overCap,
@@ -84,11 +77,9 @@ export function evaluateRefund(
   if (hardDeny.length > 0) {
     decision = "deny";
     summary = hardDeny[0].detail;
-  } else if (flagged || overCap) {
+  } else if (overCap) {
     decision = "escalate";
-    summary = flagged
-      ? `Escalate: customer flagged for review (${refundsLast90Days} refunds in 90 days).`
-      : `Escalate: ${money(eligibleAmount)} exceeds the ${money(AUTO_APPROVE_CAP)} cap.`;
+    summary = `Escalate: ${money(eligibleAmount)} exceeds the ${money(AUTO_APPROVE_CAP)} cap.`;
   } else {
     decision = "approve";
     summary = ineligibleNames.length

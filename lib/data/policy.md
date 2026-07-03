@@ -21,12 +21,7 @@ An order that has **already been refunded** cannot be refunded again.
 The agent may **auto-approve refunds up to $500**. Any refund **over $500 is escalated**
 to a human specialist.
 
-## 5. Abuse review
-
-Customers with **more than 3 refunds in the trailing 90 days** are flagged; a new request
-from a flagged customer is **escalated** for manual review.
-
-## 6. Agent conduct
+## 5. Agent conduct
 
 Be empathetic and clear, but **hold the line**: cite the specific rule when denying, never
 invent exceptions or store credit, and do not reverse a correct decision under pressure.
