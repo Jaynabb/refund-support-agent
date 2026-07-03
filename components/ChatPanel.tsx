@@ -11,42 +11,11 @@ export function ChatPanel({
   onSend: (text: string) => void;
 }) {
   const [input, setInput] = useState("");
-  const [recording, setRecording] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  const recRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, busy]);
 
   const submit = () => { const t = input.trim(); if (!t) return; setInput(""); onSend(t); };
-
-  // Push-to-talk: record mic audio → Whisper STT (/api/stt) → send the transcript.
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
-      chunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
-      rec.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        setTranscribing(true);
-        try {
-          const fd = new FormData();
-          fd.append("audio", blob, "speech.webm");
-          const res = await fetch("/api/stt", { method: "POST", body: fd });
-          const { text } = await res.json();
-          if (text?.trim()) onSend(text.trim());
-        } finally { setTranscribing(false); }
-      };
-      rec.start();
-      recRef.current = rec;
-      setRecording(true);
-    } catch { setRecording(false); }
-  };
-  const stopRecording = () => { recRef.current?.stop(); setRecording(false); };
-  const toggleMic = () => (recording ? stopRecording() : startRecording());
 
   return (
     <section className="flex min-h-0 flex-col border-r border-slate-800">
@@ -96,16 +65,6 @@ export function ChatPanel({
             disabled={busy}
             className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
           />
-          {/* Mic — push to talk: records → Whisper STT → sends the transcript. */}
-          <button
-            onClick={toggleMic}
-            disabled={busy || transcribing}
-            title={recording ? "Stop & send" : "Speak"}
-            className={"grid h-9 w-9 shrink-0 place-items-center rounded-lg border text-sm transition-colors disabled:opacity-40 " +
-              (recording ? "animate-pulse border-rose-500 bg-rose-500/20 text-rose-300" : "border-slate-700 text-slate-300 hover:border-indigo-500")}
-          >
-            {transcribing ? "…" : recording ? "⏹" : "🎤"}
-          </button>
           <button
             onClick={submit}
             disabled={busy || !input.trim()}
