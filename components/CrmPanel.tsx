@@ -36,7 +36,7 @@ export function CrmPanel() {
   const total = customers.length + conversations.length;
 
   return (
-    <section className="flex min-h-0 flex-col border-t border-slate-200 bg-white">
+    <section className="flex min-h-0 flex-col bg-white">
       <div className="flex items-center justify-between border-b border-slate-200 px-6 py-2">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
           CRM · <span className="text-[#1D2333]">{total}</span> records
