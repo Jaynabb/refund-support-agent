@@ -45,9 +45,9 @@ const tools = [
   tool("check_refund_policy", "Authoritative eligibility check. Returns approve/deny/escalate, the eligible amount, and the rules checked. Always call before deciding.", "check-policy",
     { orderId: { type: "string", description: "Order ID" }, reason: { type: "string", description: "defective, damaged, wrong_item, not_as_described, or changed_mind" } }, ["orderId", "reason"]),
   tool("issue_refund", "Issue a refund AFTER check_refund_policy returned approve. Re-verifies policy.", "issue-refund",
-    { orderId: { type: "string" }, amount: { type: "number", description: "eligible amount" }, reason: { type: "string" } }, ["orderId", "amount", "reason"]),
+    { orderId: { type: "string", description: "Order ID to refund" }, amount: { type: "number", description: "the eligible amount from the policy check" }, reason: { type: "string", description: "the refund reason" } }, ["orderId", "amount", "reason"]),
   tool("escalate_to_human", "Escalate to a human specialist when the policy check returns escalate.", "escalate",
-    { orderId: { type: "string" }, reason: { type: "string", description: "why (cite policy)" } }, ["orderId", "reason"]),
+    { orderId: { type: "string", description: "Order ID to escalate" }, reason: { type: "string", description: "why it is being escalated (cite policy)" } }, ["orderId", "reason"]),
 ];
 
 const body = {

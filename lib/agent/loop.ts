@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentEvent, AgentEventType, ChatMessage } from "@/lib/types";
 import { TOOLS, TOOL_DEFINITIONS, RetryableToolError } from "@/lib/tools";
+import { logConversation } from "@/lib/store/conversations";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The agent loop. A MANUAL Claude tool-use loop (not the SDK tool runner) so we
@@ -69,7 +70,7 @@ async function runToolWithRetry(
   }
 }
 
-export async function* runAgentTurn(history: ChatMessage[]): AsyncGenerator<AgentEvent> {
+export async function* runAgentTurn(history: ChatMessage[], conversationId?: string): AsyncGenerator<AgentEvent> {
   const last = history[history.length - 1];
   if (last?.role === "user") yield makeEvent("user_message", last.content, { text: last.content });
 
@@ -106,6 +107,14 @@ export async function* runAgentTurn(history: ChatMessage[]): AsyncGenerator<Agen
             const ev = result as { decision: string; summary: string; eligibleAmount: number; rules: unknown };
             yield makeEvent("policy_check", `policy → ${ev.decision.toUpperCase()} — ${ev.summary}`, ev);
             yield makeEvent("decision", ev.decision.toUpperCase(), { decision: ev.decision, summary: ev.summary });
+            // Log/refresh this conversation's CRM record with the decision.
+            if (conversationId) {
+              logConversation({
+                id: conversationId, channel: "text",
+                orderId: String(input.orderId ?? ""), reason: String(input.reason ?? ""),
+                decision: ev.decision as never, amount: ev.eligibleAmount,
+              });
+            }
           } else {
             yield makeEvent("tool_result", `← ${block.name} ${resultLabel(block.name, result)}`, { name: block.name, result });
           }

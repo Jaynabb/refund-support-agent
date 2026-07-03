@@ -1,5 +1,6 @@
 import { TOOLS, RetryableToolError } from "@/lib/tools";
 import { publish } from "@/lib/events/bus";
+import { logConversation } from "@/lib/store/conversations";
 
 // Webhook endpoints for the ElevenLabs phone agent's SERVER tools. Each runs the
 // same deterministic tool/policy logic as the browser agent, publishes the step to
@@ -46,9 +47,22 @@ export async function POST(req: Request, ctx: { params: Promise<{ tool: string }
   }
 
   const r = result as Record<string, unknown>;
-  if (name === "check_refund_policy" && r.found) {
+  const orderId = String((input as { orderId?: unknown }).orderId ?? "");
+  // Group a call's tool activity under one CRM record keyed by the order.
+  const convId = orderId ? `voice_${orderId}` : `voice_${Date.now()}`;
+
+  if (name === "lookup_order" && r.found) {
+    // Log the inquiry as soon as Ava pulls the order — the CRM row appears live mid-call.
+    logConversation({ id: convId, channel: "voice", orderId, decision: "pending" });
+    publish("tool_result", `← ${name} found`, { name, result: r });
+  } else if (name === "check_refund_policy" && r.found) {
     publish("policy_check", `policy → ${String(r.decision).toUpperCase()} — ${r.summary}`, r);
     publish("decision", String(r.decision).toUpperCase(), { decision: r.decision, summary: r.summary });
+    logConversation({
+      id: convId, channel: "voice", orderId,
+      reason: String((input as { reason?: unknown }).reason ?? ""),
+      decision: r.decision as never, amount: Number(r.eligibleAmount ?? 0),
+    });
   } else {
     publish("tool_result", `← ${name} ${resultLabel(name, r)}`, { name, result: r });
   }

@@ -4,16 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentEvent, ChatMessage } from "@/lib/types";
 import { ReasoningPanel } from "@/components/ReasoningPanel";
 import { ChatPanel } from "@/components/ChatPanel";
-
-// Sample orders wired to specific policy outcomes, for a smooth live demo.
-const SCENARIOS = [
-  { label: "Approve — defective kettle", text: "Hi, I'd like a refund for order ORD-1001 — the kettle arrived defective." },
-  { label: "Deny — outside window", text: "I want a refund for ORD-1002, the headphones. It's been about 6 weeks." },
-  { label: "Deny — final sale", text: "Refund for order ORD-1003 please, I changed my mind on the tee." },
-  { label: "Escalate — over $500", text: "My laptop order ORD-1006 came in damaged, I need a refund." },
-  { label: "Escalate — flagged account", text: "I'd like a refund on ORD-1007, the speaker is defective." },
-  { label: "Partial — mixed order", text: "Order ORD-1015 — the frying pan is defective, I want a refund." },
-];
+import { PolicyRules } from "@/components/PolicyRules";
+import { CrmPanel } from "@/components/CrmPanel";
 
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -23,6 +15,8 @@ export default function Home() {
   const busyRef = useRef(false);
   const voiceRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const convIdRef = useRef<string>("");
+  if (!convIdRef.current) convIdRef.current = `conv_${Date.now()}_${Math.round(Math.random() * 1e4)}`;
 
   const speak = useCallback(async (text: string) => {
     try {
@@ -52,7 +46,7 @@ export default function Home() {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, conversationId: convIdRef.current }),
       });
       if (!res.body) throw new Error("No response stream");
 
@@ -104,7 +98,10 @@ export default function Home() {
     return () => es.close();
   }, []);
 
-  const reset = () => { setMessages([]); setEvents([]); audioRef.current?.pause(); };
+  const reset = () => {
+    setMessages([]); setEvents([]); audioRef.current?.pause();
+    convIdRef.current = `conv_${Date.now()}_${Math.round(Math.random() * 1e4)}`;
+  };
   const toggleVoice = () => { const v = !voiceMode; setVoiceMode(v); voiceRef.current = v; };
 
   return (
@@ -134,20 +131,17 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2 border-b border-slate-800 bg-slate-900/50 px-6 py-2.5">
-        <span className="self-center text-xs text-slate-500">Try:</span>
-        {SCENARIOS.map((s) => (
-          <button key={s.label} onClick={() => send(s.text)} disabled={busy}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-indigo-500 hover:text-white disabled:opacity-40">
-            {s.label}
-          </button>
-        ))}
-      </div>
+      <PolicyRules />
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <ChatPanel messages={messages} busy={busy} onSend={send} />
-        <ReasoningPanel events={events} />
-      </main>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <ChatPanel messages={messages} busy={busy} onSend={send} />
+          <ReasoningPanel events={events} />
+        </main>
+        <div className="h-56 shrink-0">
+          <CrmPanel />
+        </div>
+      </div>
     </div>
   );
 }
