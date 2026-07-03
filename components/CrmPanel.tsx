@@ -17,21 +17,6 @@ interface Conversation {
 const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 const CAT_LABEL: Record<string, string> = { final_sale: "Final sale", digital: "Digital", standard: "Standard" };
 
-// Which policy rules bite this order — shown as small tags so you can read
-// approve/deny/escalate straight off the order data.
-function signals(o: OrderRow): { t: string; tone: string }[] {
-  const tags: { t: string; tone: string }[] = [];
-  const nonRef = o.items.filter((i) => i.category !== "standard");
-  if (nonRef.length) tags.push({ t: nonRef.map((i) => CAT_LABEL[i.category]).join(" · ") + " · non-refundable", tone: "rose" });
-  if (o.refunded) tags.push({ t: "Already refunded", tone: "rose" });
-  if (o.total > 500) tags.push({ t: "Over $500 → escalate", tone: "amber" });
-  return tags;
-}
-
-const TONE: Record<string, string> = {
-  rose: "border-rose-200 bg-rose-50 text-rose-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-700",
-};
 const DEC_TXT: Record<string, string> = {
   approve: "text-emerald-600", deny: "text-rose-600", escalate: "text-amber-600", pending: "text-slate-400",
 };
@@ -72,9 +57,9 @@ export function CrmPanel() {
               <th className="px-6 py-2 font-medium">Customer</th>
               <th className="px-2 py-2 font-medium">Order</th>
               <th className="px-2 py-2 font-medium">Item</th>
+              <th className="px-2 py-2 font-medium">Type</th>
               <th className="px-2 py-2 text-right font-medium">Amount</th>
-              <th className="px-2 py-2 font-medium">Delivered</th>
-              <th className="px-6 py-2 font-medium">Policy signals</th>
+              <th className="px-6 py-2 font-medium">Delivered</th>
             </tr>
           </thead>
           <tbody>
@@ -82,7 +67,7 @@ export function CrmPanel() {
               const flagged = c.refundsLast90Days > 3;
               const d = o.deliveredAt ? daysSince(o.deliveredAt) : null;
               const outWindow = d !== null && d > 30;
-              const tags = signals(o);
+              const cats = [...new Set(o.items.map((i) => i.category))];
               return (
                 <tr key={o.orderId} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="px-6 py-1.5">
@@ -91,15 +76,18 @@ export function CrmPanel() {
                   </td>
                   <td className="px-2 py-1.5 text-slate-500">{o.orderId}</td>
                   <td className="px-2 py-1.5 text-slate-600">{o.items.map((i) => i.name).join(", ")}</td>
-                  <td className={"px-2 py-1.5 text-right tabular-nums " + (o.total > 500 ? "font-semibold text-amber-600" : "text-slate-600")}>${o.total.toFixed(2)}</td>
-                  <td className={"px-2 py-1.5 " + (o.deliveredAt === null ? "text-rose-600" : outWindow ? "text-rose-600" : "text-slate-500")}>
-                    {o.deliveredAt === null ? "Not delivered" : `${d}d ago`}
+                  <td className="px-2 py-1.5">
+                    {cats.map((cat) => (
+                      <span key={cat} className={"mr-1 rounded px-1.5 py-0.5 text-[10px] font-medium " +
+                        (cat === "standard" ? "text-slate-400" : "border border-rose-200 bg-rose-50 text-rose-700")}>{CAT_LABEL[cat]}</span>
+                    ))}
                   </td>
-                  <td className="px-6 py-1.5">
-                    <div className="flex flex-wrap gap-1">
-                      {outWindow && <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${TONE.rose}`}>Outside 30-day window</span>}
-                      {tags.map((t) => <span key={t.t} className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${TONE[t.tone]}`}>{t.t}</span>)}
-                    </div>
+                  <td className={"px-2 py-1.5 text-right tabular-nums " + (o.total > 500 ? "font-semibold text-amber-600" : "text-slate-600")}>
+                    ${o.total.toFixed(2)}
+                    {o.refunded && <span className="ml-1 rounded border border-slate-200 bg-slate-50 px-1 text-[9px] uppercase text-slate-400">refunded</span>}
+                  </td>
+                  <td className={"px-6 py-1.5 " + (o.deliveredAt === null || outWindow ? "text-rose-600" : "text-slate-500")}>
+                    {o.deliveredAt === null ? "Not delivered" : `${d}d ago`}
                   </td>
                 </tr>
               );
