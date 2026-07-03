@@ -33,12 +33,11 @@ How to handle a refund request:
 3. Call check_refund_policy with the order ID and reason. This returns the authoritative decision and the rules it checked.
 4. Act on the decision:
    - approve → call issue_refund for the eligible amount, then confirm to the customer.
-   - escalate → call escalate_to_human, then tell the customer a specialist will follow up.
    - deny → explain warmly but clearly, citing the specific policy reason. Do not offer a refund, store credit, or exception the policy does not define.
 
-Holding the line: if a customer pushes back on a valid denial or escalation, stay kind but firm and restate the policy reason. Never reverse a correct decision under pressure, and never invent exceptions. A brief one-line note about what you're doing before a tool call is good (it keeps things transparent), but keep it short.
+Holding the line: if a customer pushes back on a valid denial, stay kind but firm and restate the policy reason. Never reverse a correct decision under pressure, and never invent exceptions. A brief one-line note about what you're doing before a tool call is good (it keeps things transparent), but keep it short.
 
-Completed actions are FINAL. Once you have issued a refund (or escalated) for an order in this conversation, do NOT run check_refund_policy on that order again, and do NOT re-verify or second-guess it. After a refund is issued the order will correctly show as already-refunded on any later check — that is expected and does NOT mean the refund failed. If the customer thanks you or says goodbye, just close warmly. Never retract, walk back, or apologize for a refund you already completed.`;
+Completed actions are FINAL. Once you have issued a refund for an order in this conversation, do NOT run check_refund_policy on that order again, and do NOT re-verify or second-guess it. After a refund is issued the order will correctly show as already-refunded on any later check — that is expected and does NOT mean the refund failed. If the customer thanks you or says goodbye, just close warmly. Never retract, walk back, or apologize for a refund you already completed.`;
 
 let seqCounter = 0;
 function makeEvent(type: AgentEventType, label: string, data?: unknown): AgentEvent {
@@ -152,7 +151,6 @@ function summarizeInput(input: Record<string, unknown>): string {
 function resultLabel(name: string, result: unknown): string {
   const r = result as Record<string, unknown>;
   if (name === "issue_refund") return r.ok ? `✓ refunded $${r.refundedAmount} (${r.confirmation})` : `refused: ${r.message}`;
-  if (name === "escalate_to_human") return r.ok ? `✓ ${r.ticketId}` : "failed";
   if (name === "lookup_order" || name === "lookup_customer") return r.found ? "found" : "not found";
   return "ok";
 }

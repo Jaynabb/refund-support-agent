@@ -14,7 +14,6 @@ const TOOL_MAP: Record<string, string> = {
   "lookup-customer": "lookup_customer",
   "check-policy": "check_refund_policy",
   "issue-refund": "issue_refund",
-  "escalate": "escalate_to_human",
 };
 
 export async function POST(req: Request, ctx: { params: Promise<{ tool: string }> }) {
@@ -75,7 +74,6 @@ function summarize(input: Record<string, unknown>): string {
 }
 function resultLabel(name: string, r: Record<string, unknown>): string {
   if (name === "issue_refund") return r.ok ? `✓ refunded $${r.refundedAmount}` : `refused: ${r.message}`;
-  if (name === "escalate_to_human") return r.ok ? `✓ ${r.ticketId}` : "failed";
   if (name === "lookup_order" || name === "lookup_customer") return r.found ? "found" : "not found";
   return "ok";
 }

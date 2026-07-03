@@ -7,8 +7,8 @@ const daysAgo = (n: number): string =>
 
 // 15 profiles. Each order is crafted to hit a specific policy branch — see the
 // SCENARIO note on each — so the demo covers clean approvals, hard denials
-// (return window, final sale, digital, double-refund, changed-mind), escalations
-// (over-cap, fraud flag), the evidence rule, and a partial (mixed-eligibility) order.
+// (return window, final sale, digital, double-refund), and partial
+// (mixed-eligibility) orders.
 export const CUSTOMERS: Customer[] = [
   {
     // SCENARIO: clean approval — defective, in window, under cap.

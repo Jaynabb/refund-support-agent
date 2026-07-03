@@ -16,12 +16,7 @@ refundable and non-refundable items, only the refundable portion is refunded.
 
 An order that has **already been refunded** cannot be refunded again.
 
-## 4. Refund authority
-
-The agent may **auto-approve refunds up to $500**. Any refund **over $500 is escalated**
-to a human specialist.
-
-## 5. Agent conduct
+## 4. Agent conduct
 
 Be empathetic and clear, but **hold the line**: cite the specific rule when denying, never
 invent exceptions or store credit, and do not reverse a correct decision under pressure.

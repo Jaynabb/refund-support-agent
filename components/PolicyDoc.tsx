@@ -8,9 +8,7 @@ const SECTIONS: { n: string; title: string; body: string; tag: string; tone: str
     body: "Final-sale and digital/downloadable items are non-refundable. A mixed order refunds only the refundable portion (partial)." },
   { n: "3", title: "No double refunds", tag: "Deny if repeat", tone: "rose",
     body: "An order that has already been refunded cannot be refunded again." },
-  { n: "4", title: "Refund authority", tag: "Escalate over $500", tone: "amber",
-    body: "The agent may auto-approve refunds up to $500. Any refund over $500 is escalated to a human specialist." },
-  { n: "5", title: "Agent conduct", tag: "Hold the line", tone: "slate",
+  { n: "4", title: "Agent conduct", tag: "Hold the line", tone: "slate",
     body: "Be empathetic and clear, but hold the line: cite the specific rule when denying, never invent exceptions, and don't reverse a correct decision under pressure." },
 ];
 

@@ -7,15 +7,13 @@ import type {
 //
 // Intentionally small and unambiguous. The LLM gathers info and explains; this
 // decides, and returns every rule it checked (shown in the reasoning panel).
-//   Deny:     not delivered / outside 30-day window / already refunded /
-//             no refundable items.
-//   Escalate: amount over the $500 auto-approve cap.
-//   Approve:  otherwise (partial when a mix of refundable + non-refundable items).
+//   Deny:    not delivered / outside 30-day window / already refunded /
+//            no refundable items.
+//   Approve: otherwise (partial when a mix of refundable + non-refundable items).
 // Mirrors lib/data/policy.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const RETURN_WINDOW_DAYS = 30;
-const AUTO_APPROVE_CAP = 500;
 
 const NON_REFUNDABLE = new Set(["final_sale", "digital"]);
 
@@ -62,13 +60,6 @@ export function evaluateRefund(
       : `Every item is non-refundable (${ineligibleNames.join(", ")}) — policy §2.`,
   });
 
-  // ── Escalation signal ─────────────────────────────────────────────────────────
-  const overCap = eligibleAmount > AUTO_APPROVE_CAP;
-  rules.push({
-    rule: "amount_authority", passed: !overCap,
-    detail: overCap ? `${money(eligibleAmount)} exceeds the ${money(AUTO_APPROVE_CAP)} auto-approve cap — escalate (policy §4).` : `${money(eligibleAmount)} within the ${money(AUTO_APPROVE_CAP)} auto-approve limit.`,
-  });
-
   // ── Decision ────────────────────────────────────────────────────────────────
   const hardDeny = rules.filter((r) => ["delivered", "not_already_refunded", "return_window", "item_eligibility"].includes(r.rule) && !r.passed);
 
@@ -77,9 +68,6 @@ export function evaluateRefund(
   if (hardDeny.length > 0) {
     decision = "deny";
     summary = hardDeny[0].detail;
-  } else if (overCap) {
-    decision = "escalate";
-    summary = `Escalate: ${money(eligibleAmount)} exceeds the ${money(AUTO_APPROVE_CAP)} cap.`;
   } else {
     decision = "approve";
     summary = ineligibleNames.length

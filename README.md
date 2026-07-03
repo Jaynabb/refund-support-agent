@@ -30,8 +30,7 @@ Browser (Next.js, split view)
                                               └─ Tools
                                                    ├─ lookup_customer / lookup_order   (CRM)
                                                    ├─ check_refund_policy  ─► Policy Engine  ← DECIDES
-                                                   ├─ issue_refund         ─► re-checks Policy Engine
-                                                   └─ escalate_to_human
+                                                   └─ issue_refund         ─► re-checks Policy Engine
 ```
 
 - **`lib/policy/engine.ts`** — the deterministic heart. Pure function: `(order, reason,
@@ -44,16 +43,16 @@ Browser (Next.js, split view)
   engine** before refunding — the LLM cannot cause a non-compliant refund even if it tries.
 - **`lib/data/`** — 15-profile CRM (`crm.ts`) and the binding policy (`policy.md`). Each
   profile's order is crafted to hit a specific policy branch (approve, each denial reason,
-  escalations, evidence rule, partial).
+  and a partial mixed-eligibility order).
 - **`app/api/agent/route.ts`** — streams the agent's events to the browser as SSE.
 - **`components/`** — `ChatPanel` (customer) and `ReasoningPanel` (live admin timeline).
 
 ## The policy (enforced deterministically)
 
-30-day return window · non-refundable categories (final-sale, digital, perishable/
-personal-care) · no double refunds · changed-mind only within 14 days · photo evidence
-required for damage claims over $100 · auto-approve up to $500 (over → escalate) · >3
-refunds in 90 days → escalate. Full text in [`lib/data/policy.md`](lib/data/policy.md).
+30-day return window · non-refundable items (final-sale, digital) refund only the
+refundable portion of a mixed order · no double refunds · agent holds the line on a
+valid denial and never invents exceptions. Full text in
+[`lib/data/policy.md`](lib/data/policy.md).
 
 ## Run it
 

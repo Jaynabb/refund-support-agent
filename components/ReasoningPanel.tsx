@@ -19,7 +19,6 @@ const STYLE: Record<string, { dot: string; label: string; tint?: string }> = {
 const DECISION_BADGE: Record<string, string> = {
   approve: "bg-emerald-50 text-emerald-700 border-emerald-200",
   deny: "bg-rose-50 text-rose-700 border-rose-200",
-  escalate: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 export function ReasoningPanel({ events }: { events: AgentEvent[] }) {

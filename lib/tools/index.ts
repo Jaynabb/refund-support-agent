@@ -14,7 +14,6 @@ import { evaluateRefund } from "@/lib/policy/engine";
 
 // Mock mutable state (in-memory; resets on server restart).
 const refundedOrders = new Set<string>();
-const escalations: { ticketId: string; orderId: string; reason: string }[] = [];
 // Tracks first-attempt gateway failures per order so the demo reliably shows one retry.
 const gatewayFirstAttempt = new Set<string>();
 
@@ -101,7 +100,7 @@ export const TOOLS: Record<string, Tool> = {
     definition: {
       name: "check_refund_policy",
       description:
-        "Evaluate whether an order qualifies for a refund under the store policy, given the customer's stated reason. Returns a decision (approve / deny / escalate), the eligible amount, and the full list of policy rules checked with pass/fail and explanations. This is the authoritative eligibility check — always call it before approving, denying, or escalating.",
+        "Evaluate whether an order qualifies for a refund under the store policy. Returns a decision (approve / deny), the eligible amount, and the full list of policy rules checked with pass/fail and explanations. This is the authoritative eligibility check — always call it before approving or denying.",
       input_schema: {
         type: "object",
         properties: {
@@ -169,27 +168,6 @@ export const TOOLS: Record<string, Tool> = {
 
       refundedOrders.add(id);
       return { ok: true, orderId: id, refundedAmount: evaluation.eligibleAmount, confirmation: `RF-${id.replace("ORD-", "")}-${refundedOrders.size}` };
-    },
-  },
-
-  escalate_to_human: {
-    definition: {
-      name: "escalate_to_human",
-      description:
-        "Escalate a refund to a human specialist. Call this when check_refund_policy returns an 'escalate' decision (e.g. amount over the auto-approve cap, or a flagged customer). Creates a review ticket.",
-      input_schema: {
-        type: "object",
-        properties: {
-          orderId: { type: "string", description: "Order ID to escalate" },
-          reason: { type: "string", description: "Why this is being escalated (cite the policy)" },
-        },
-        required: ["orderId", "reason"],
-      },
-    },
-    handler: async ({ orderId, reason }) => {
-      const ticketId = `ESC-${String(orderId).replace("ORD-", "")}-${escalations.length + 1}`;
-      escalations.push({ ticketId, orderId: String(orderId), reason: String(reason) });
-      return { ok: true, ticketId, message: `Escalated to a human specialist. Ticket ${ticketId} created.` };
     },
   },
 };

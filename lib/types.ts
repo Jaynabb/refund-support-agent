@@ -35,7 +35,7 @@ export interface Customer {
 
 // ── Policy evaluation ────────────────────────────────────────────────────────
 
-export type RefundDecision = "approve" | "deny" | "escalate";
+export type RefundDecision = "approve" | "deny";
 
 export type RefundReason =
   | "defective"

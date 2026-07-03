@@ -18,7 +18,7 @@ const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTim
 const CAT_LABEL: Record<string, string> = { final_sale: "Final sale", digital: "Digital", standard: "Standard" };
 
 const DEC_TXT: Record<string, string> = {
-  approve: "text-emerald-600", deny: "text-rose-600", escalate: "text-amber-600", pending: "text-slate-400",
+  approve: "text-emerald-600", deny: "text-rose-600", pending: "text-slate-400",
 };
 const ago = (ts: number) => { const s = Math.floor((Date.now() - ts) / 1000); return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m` : `${Math.floor(s / 3600)}h`; };
 
