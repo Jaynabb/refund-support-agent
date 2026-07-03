@@ -1,53 +1,32 @@
-# Acme Store — Refund Policy (v2.4)
+# Acme Store — Refund Policy
 
-This policy is **binding**. The support agent must apply it exactly and may not
-grant exceptions. When a request fails any rule below, the refund is denied or
-escalated — never approved as a courtesy.
+This policy is **binding**. The agent applies it exactly and may not grant exceptions.
 
 ## 1. Return window
 
-- Refunds are available for **30 days from the delivery date**.
-- A request made **more than 30 days after delivery is denied.**
-- Orders **not yet delivered** are not eligible for a refund (cancel instead).
+Refunds are available for **30 days from the delivery date**. A request made after 30
+days — or for an order not yet delivered — is **denied**.
 
-## 2. Item eligibility
+## 2. Non-refundable items
 
-Some items are **non-refundable** regardless of timing or reason:
-
-- **Final-sale items** — non-refundable, no exceptions.
-- **Digital / downloadable goods** — non-refundable once delivered.
-- **Perishable and opened personal-care items** — non-refundable for hygiene/safety.
-
-Standard items are refundable if all other rules pass.
+**Final-sale** and **digital / downloadable** items are non-refundable. If an order mixes
+refundable and non-refundable items, only the refundable portion is refunded.
 
 ## 3. No double refunds
 
-- An order (or line item) that has **already been refunded** cannot be refunded again.
+An order that has **already been refunded** cannot be refunded again.
 
-## 4. Acceptable reasons
+## 4. Refund authority
 
-- Always eligible (within the window): **defective, damaged, wrong item, not as described**.
-- **"Changed my mind"** is eligible **only within 14 days of delivery AND only for
-  unopened standard items.** After 14 days, changed-mind requests are denied.
+The agent may **auto-approve refunds up to $500**. Any refund **over $500 is escalated**
+to a human specialist.
 
-## 5. Evidence
+## 5. Abuse review
 
-- For **damage or defect claims on orders over $100**, **photo evidence is required.**
-- If photo evidence is missing, the agent must **request it** and may not approve until provided.
+Customers with **more than 3 refunds in the trailing 90 days** are flagged; a new request
+from a flagged customer is **escalated** for manual review.
 
-## 6. Refund amount authority
+## 6. Agent conduct
 
-- The agent may **auto-approve refunds up to $500**.
-- Any refund **over $500 must be escalated** to a human specialist — the agent cannot approve it.
-
-## 7. Fraud / abuse review
-
-- Customers with **more than 3 refunds in the trailing 90 days** are flagged. Any new refund
-  request from a flagged customer must be **escalated** for manual review, not auto-approved.
-
-## 8. Agent conduct
-
-- Be empathetic and clear, but **hold the line**: cite the specific rule when denying.
-- Do not invent exceptions, discounts, or store credit that this policy does not define.
-- If a customer pushes back on a valid denial, restate the policy calmly; do not reverse a
-  correct decision under pressure.
+Be empathetic and clear, but **hold the line**: cite the specific rule when denying, never
+invent exceptions or store credit, and do not reverse a correct decision under pressure.

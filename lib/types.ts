@@ -2,12 +2,7 @@
 // Domain types — CRM, orders, refund policy, and the streaming agent event log.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ItemCategory =
-  | "standard"
-  | "final_sale"
-  | "digital"
-  | "perishable"
-  | "personal_care";
+export type ItemCategory = "standard" | "final_sale" | "digital";
 
 export interface OrderItem {
   sku: string;

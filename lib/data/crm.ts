@@ -137,7 +137,7 @@ export const CUSTOMERS: Customer[] = [
     orders: [{
       orderId: "ORD-1013", customerId: "C013", placedAt: daysAgo(5), deliveredAt: daysAgo(2),
       total: 34.5, refunded: false, refundedAmount: 0, hasPhotoEvidence: false,
-      items: [{ sku: "SKU-RZR-13", name: "Electric Razor", category: "personal_care", price: 34.5, quantity: 1 }],
+      items: [{ sku: "SKU-RZR-13", name: "Electric Razor", category: "standard", price: 34.5, quantity: 1 }],
     }],
   },
   {
