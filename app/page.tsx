@@ -83,23 +83,23 @@ export default function Home() {
 
   return (
     <ConversationProvider onMessage={onVoiceMessage}>
-      <div className="flex h-dvh flex-col bg-slate-950 text-slate-100">
-        <header className="flex items-center justify-between border-b border-slate-800 px-6 py-3">
+      <div className="flex h-dvh flex-col bg-white text-[#1D2333]">
+        <header className="flex items-center justify-between border-b border-slate-200 px-6 py-3">
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 font-bold">A</div>
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#FF6900] font-bold text-white">A</div>
             <div>
               <h1 className="text-sm font-semibold leading-tight">Ava — AI Refund Support</h1>
-              <p className="text-xs text-slate-400 leading-tight">Acme Store · policy-grounded refund agent</p>
+              <p className="text-xs text-slate-500 leading-tight">Acme Store · policy-grounded refund agent</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className={"flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs " +
-              (phoneConnected ? "border-emerald-600/50 text-emerald-300" : "border-slate-700 text-slate-500")}>
-              <span className={"h-1.5 w-1.5 rounded-full " + (phoneConnected ? "bg-emerald-400" : "bg-slate-600")} />
+              (phoneConnected ? "border-emerald-500/50 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-400")}>
+              <span className={"h-1.5 w-1.5 rounded-full " + (phoneConnected ? "bg-emerald-500" : "bg-slate-300")} />
               📞 Live
             </span>
             <VoiceCall />
-            <button onClick={reset} className="rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800">
+            <button onClick={reset} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100">
               New conversation
             </button>
           </div>

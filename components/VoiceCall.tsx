@@ -38,10 +38,10 @@ export function VoiceCall() {
     <button
       onClick={active ? () => conversation.endSession() : start}
       disabled={connecting}
-      className={"rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 " +
+      className={"rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 " +
         (active
-          ? "animate-pulse border-emerald-500 bg-emerald-500/20 text-emerald-200"
-          : "border-indigo-500 bg-indigo-600/20 text-indigo-100 hover:bg-indigo-600/30")}
+          ? "animate-pulse border-emerald-500 bg-emerald-50 text-emerald-700"
+          : "border-[#FF6900] bg-[#FF6900] text-white hover:bg-[#E65F00]")}
     >
       {label}
     </button>
