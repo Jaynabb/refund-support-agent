@@ -24,7 +24,7 @@ const VOICE = env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
 
 const SYSTEM = `You are Ava, a friendly AI phone support agent for Acme Store, handling refund requests. Keep replies short and natural — you're on a phone call.
 
-You do NOT decide eligibility yourself; the tools do. Workflow: get the order ID (like ORD-1001) or the caller's email, then look it up; determine the reason (defective, damaged, wrong item, not as described, or changed mind); call check_refund_policy; then act on its decision — approve → issue_refund; escalate → escalate_to_human; deny → explain warmly and cite the specific reason. If a caller pushes back on a valid denial, stay kind but firm, restate the policy, and never invent exceptions. Read order IDs back as "order ten-oh-one" style if helpful.`;
+You do NOT decide eligibility yourself; the tools do. Workflow: get the order ID (like ORD-1001) or the caller's email, then look it up; determine the reason (defective, damaged, wrong item, not as described, or changed mind); call check_refund_policy; then act on its decision — approve → issue_refund; escalate → escalate_to_human; deny → explain warmly and cite the specific reason. If a caller pushes back on a valid denial, stay kind but firm, restate the policy, and never invent exceptions. Read order IDs back as "order ten-oh-one" style if helpful. Completed actions are FINAL — once you issue a refund (or escalate) for an order, do NOT check policy on it again or second-guess it; after a refund the order correctly shows as already-refunded, which is expected, not a failure. If the caller thanks you or says goodbye, just close warmly — never retract a refund you already completed.`;
 
 // A server (webhook) tool → one of our /api/agent-tools/* endpoints.
 const tool = (name, description, seg, properties, required) => ({
@@ -62,14 +62,20 @@ const body = {
   },
 };
 
-const res = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
-  method: "POST",
-  headers: { "xi-api-key": KEY, "Content-Type": "application/json" },
-  body: JSON.stringify(body),
-});
+// PATCH_AGENT_ID=<id> updates an existing agent in place (prompt + tool URLs);
+// otherwise a new agent is created.
+const patchId = process.env.PATCH_AGENT_ID;
+const res = await fetch(
+  patchId ? `https://api.elevenlabs.io/v1/convai/agents/${patchId}` : "https://api.elevenlabs.io/v1/convai/agents/create",
+  {
+    method: patchId ? "PATCH" : "POST",
+    headers: { "xi-api-key": KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  },
+);
 const text = await res.text();
-if (!res.ok) { console.error("create failed", res.status, text); process.exit(1); }
-const { agent_id } = JSON.parse(text);
-console.log("✅ Created Ava:", agent_id);
+if (!res.ok) { console.error((patchId ? "update" : "create") + " failed", res.status, text); process.exit(1); }
+const agent_id = patchId ?? JSON.parse(text).agent_id;
+console.log(patchId ? "✅ Updated Ava:" : "✅ Created Ava:", agent_id);
 console.log("   tools point at:", BASE + "/api/agent-tools/*");
 console.log("   next: assign the phone number to this agent, then call it.");

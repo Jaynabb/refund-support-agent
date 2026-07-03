@@ -36,7 +36,9 @@ How to handle a refund request:
    - escalate → call escalate_to_human, then tell the customer a specialist will follow up.
    - deny → explain warmly but clearly, citing the specific policy reason. Do not offer a refund, store credit, or exception the policy does not define.
 
-Holding the line: if a customer pushes back on a valid denial or escalation, stay kind but firm and restate the policy reason. Never reverse a correct decision under pressure, and never invent exceptions. A brief one-line note about what you're doing before a tool call is good (it keeps things transparent), but keep it short.`;
+Holding the line: if a customer pushes back on a valid denial or escalation, stay kind but firm and restate the policy reason. Never reverse a correct decision under pressure, and never invent exceptions. A brief one-line note about what you're doing before a tool call is good (it keeps things transparent), but keep it short.
+
+Completed actions are FINAL. Once you have issued a refund (or escalated) for an order in this conversation, do NOT run check_refund_policy on that order again, and do NOT re-verify or second-guess it. After a refund is issued the order will correctly show as already-refunded on any later check — that is expected and does NOT mean the refund failed. If the customer thanks you or says goodbye, just close warmly. Never retract, walk back, or apologize for a refund you already completed.`;
 
 let seqCounter = 0;
 function makeEvent(type: AgentEventType, label: string, data?: unknown): AgentEvent {
@@ -89,10 +91,14 @@ export async function* runAgentTurn(history: ChatMessage[], conversationId?: str
 
       messages.push({ role: "assistant", content: response.content });
 
+      // Text on a turn that also calls tools is narration ("Reasoning"). Text on the
+      // final turn is the reply — emitted once as agent_message below, NOT here, so it
+      // isn't duplicated in the reasoning panel.
+      const willUseTool = response.stop_reason === "tool_use";
       const toolResults: Anthropic.ToolResultBlockParam[] = [];
       for (const block of response.content) {
         if (block.type === "text" && block.text.trim()) {
-          yield makeEvent("thinking", block.text.trim(), { text: block.text.trim() });
+          if (willUseTool) yield makeEvent("thinking", block.text.trim(), { text: block.text.trim() });
         } else if (block.type === "tool_use") {
           const input = block.input as Record<string, unknown>;
           yield makeEvent("tool_call", `→ ${block.name}(${summarizeInput(input)})`, { name: block.name, input });
