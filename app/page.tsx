@@ -7,7 +7,6 @@ import { ReasoningPanel } from "@/components/ReasoningPanel";
 import { ChatPanel } from "@/components/ChatPanel";
 import { CrmPanel } from "@/components/CrmPanel";
 import { PolicyDoc } from "@/components/PolicyDoc";
-import { VoiceCall } from "@/components/VoiceCall";
 
 type Tab = "conversation" | "crm" | "policy";
 
@@ -15,7 +14,6 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [busy, setBusy] = useState(false);
-  const [phoneConnected, setPhoneConnected] = useState(false);
   const [tab, setTab] = useState<Tab>("conversation");
   const [crmCount, setCrmCount] = useState(15);
   const busyRef = useRef(false);
@@ -67,25 +65,26 @@ export default function Home() {
     }
   }, [messages]);
 
-  // Live feed from voice/phone server tools.
+  // Live feed from phone/voice server tools. Always subscribed, so simply calling
+  // the support number connects to the platform and drives the reasoning panel +
+  // conversation tracking in real time — no button required.
   useEffect(() => {
     const es = new EventSource("/api/live");
-    es.onopen = () => setPhoneConnected(true);
     es.onmessage = (m) => {
       try { const evt = JSON.parse(m.data) as AgentEvent; if (evt?.type) setEvents((prev) => [...prev, evt]); } catch { /* ignore */ }
     };
-    es.onerror = () => setPhoneConnected(false);
     return () => es.close();
   }, []);
 
-  // Live CRM record count for the tab badge (15 accounts + conversations).
+  // CRM tab badge = number of accounts only (the 15 seed customers). Stored
+  // conversations are shown separately in the panel, so they never inflate this.
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
-        const r = await fetch("/api/conversations", { cache: "no-store" });
+        const r = await fetch("/api/crm", { cache: "no-store" });
         const d = await r.json();
-        if (alive) setCrmCount(15 + (d.conversations?.length ?? 0));
+        if (alive) setCrmCount(d.customers?.length ?? 15);
       } catch { /* keep last */ }
     };
     load();
@@ -115,17 +114,9 @@ export default function Home() {
               <p className="text-xs text-slate-500 leading-tight">Acme Store · policy-grounded refund agent</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={"flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs " +
-              (phoneConnected ? "border-emerald-500/50 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-400")}>
-              <span className={"h-1.5 w-1.5 rounded-full " + (phoneConnected ? "bg-emerald-500" : "bg-slate-300")} />
-              📞 Live
-            </span>
-            <VoiceCall />
-            <button onClick={reset} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100">
-              New conversation
-            </button>
-          </div>
+          <button onClick={reset} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100">
+            New conversation
+          </button>
         </header>
 
         <nav className="flex items-center gap-1 border-b border-slate-200 px-4">

@@ -5,10 +5,10 @@ import type { RefundDecision } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Conversation store. Every refund interaction — text, browser voice, or phone —
-// is logged here as a CRM record. The store IS the living CRM: the 15 seed
-// customers are the standing accounts, and each conversation appends a new record
-// (the 16th, 17th…), shown growing live on the platform. A logged decision also
-// feeds the customer's refund history, which the next policy check reads.
+// is logged here. The CRM has exactly 15 standing accounts (the seed customers);
+// conversations are a separate, growing activity LOG shown alongside them, not
+// additional accounts — so they never change the account count. A logged decision
+// also feeds the customer's refund history, which the next policy check reads.
 // Persisted to a JSON file so it survives restarts.
 // ─────────────────────────────────────────────────────────────────────────────
 

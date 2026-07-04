@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/lib/types";
+import { VoiceCall } from "@/components/VoiceCall";
 
 export function ChatPanel({
   messages, busy, onSend,
@@ -26,7 +27,7 @@ export function ChatPanel({
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {messages.length === 0 && (
           <div className="mt-8 text-center text-sm text-slate-400">
-            Start a refund request, or talk to Ava with the live voice button.
+            Start a refund request — type below, tap the mic to talk to Ava, or call the support line.
           </div>
         )}
         {messages.map((m, i) => (
@@ -57,6 +58,7 @@ export function ChatPanel({
 
       <div className="border-t border-slate-200 p-3">
         <div className="flex items-center gap-2">
+          <VoiceCall />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
