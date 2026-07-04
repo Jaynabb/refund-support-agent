@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/lib/types";
 import { VoiceCall } from "@/components/VoiceCall";
 
+// The Ava phone line — configurable, defaults to the demo number. Callers reach
+// the live agent; the reasoning panel + CRM track the call in real time.
+const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || "+1 (866) 935-4129";
+
 export function ChatPanel({
   messages, busy, onSend,
 }: {
@@ -27,7 +31,8 @@ export function ChatPanel({
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {messages.length === 0 && (
           <div className="mt-8 text-center text-sm text-slate-400">
-            Start a refund request — type below, tap the mic to talk to Ava, or call the support line.
+            Start a refund request — type below, tap the mic to talk to Ava, or call{" "}
+            <span className="font-medium text-slate-500">{SUPPORT_PHONE}</span>.
           </div>
         )}
         {messages.map((m, i) => (
@@ -75,6 +80,10 @@ export function ChatPanel({
             Send
           </button>
         </div>
+        <p className="mt-2 text-center text-[11px] text-slate-400">
+          🎙️ Tap the mic to talk to Ava · 📞 or call{" "}
+          <span className="font-medium text-slate-500">{SUPPORT_PHONE}</span> — she answers live
+        </p>
       </div>
     </section>
   );
