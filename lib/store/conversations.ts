@@ -4,7 +4,7 @@ import { findOrder } from "@/lib/data/crm";
 import type { RefundDecision } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Conversation store. Every refund interaction — text, browser voice, or phone —
+// Conversation store. Every refund interaction — text or browser voice —
 // is logged here. The CRM has exactly 15 standing accounts (the seed customers);
 // conversations are a separate, growing activity LOG shown alongside them, not
 // additional accounts — so they never change the account count. A logged decision

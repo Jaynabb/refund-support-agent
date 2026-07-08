@@ -1,6 +1,6 @@
 // Creates (or updates) the "Ava" refund voice agent on ElevenLabs Conversational AI,
-// with server tools pointing at THIS app's webhook endpoints so the phone agent
-// enforces the same deterministic policy engine as the browser agent.
+// with server tools pointing at THIS app's webhook endpoints so the in-browser voice
+// agent enforces the same deterministic policy engine as the text agent.
 //
 // Usage:  node scripts/create-ava-agent.mjs <PUBLIC_BASE_URL>
 //   e.g.  node scripts/create-ava-agent.mjs https://abc123.ngrok-free.app
@@ -22,7 +22,7 @@ const env = Object.fromEntries(
 const KEY = env.ELEVENLABS_API_KEY;
 const VOICE = env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
 
-const SYSTEM = `You are Ava, a friendly AI phone support agent for Acme Store, handling refund requests. Keep replies short and natural — you're on a phone call.
+const SYSTEM = `You are Ava, a friendly AI voice support agent for Acme Store, handling refund requests. Keep replies short and natural — you're on a live voice call.
 
 You do NOT decide eligibility yourself; the tools do. Workflow: when the caller gives their name (e.g. "I'm Maria") or email, call lookup_customer to find their order — you do NOT need an order ID first; if they give an order ID, use lookup_order. If they have one order, use it; if more than one, confirm which. Determine the reason (defective, damaged, wrong item, not as described, or changed mind); call check_refund_policy; then act on its decision — approve → issue_refund; deny → explain warmly and cite the specific reason. If a caller pushes back on a valid denial, stay kind but firm, restate the policy, and never invent exceptions. Read order IDs back as "order ten-oh-one" style if helpful. Completed actions are FINAL — once you issue a refund for an order, do NOT check policy on it again or second-guess it; after a refund the order correctly shows as already-refunded, which is expected, not a failure. If the caller thanks you or says goodbye, just close warmly — never retract a refund you already completed.`;
 
@@ -78,4 +78,4 @@ if (!res.ok) { console.error((patchId ? "update" : "create") + " failed", res.st
 const agent_id = patchId ?? JSON.parse(text).agent_id;
 console.log(patchId ? "✅ Updated Ava:" : "✅ Created Ava:", agent_id);
 console.log("   tools point at:", BASE + "/api/agent-tools/*");
-console.log("   next: assign the phone number to this agent, then call it.");
+console.log("   next: set ELEVENLABS_AGENT_ID to this id, then tap the mic in the app.");

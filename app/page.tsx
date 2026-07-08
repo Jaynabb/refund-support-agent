@@ -65,9 +65,8 @@ export default function Home() {
     }
   }, [messages]);
 
-  // Live feed from phone/voice server tools. Always subscribed, so simply calling
-  // the support number connects to the platform and drives the reasoning panel +
-  // conversation tracking in real time — no button required.
+  // Live feed from the voice agent's server tools. Always subscribed, so talking to
+  // Ava via the mic drives the reasoning panel + conversation tracking in real time.
   useEffect(() => {
     const es = new EventSource("/api/live");
     es.onmessage = (m) => {

@@ -2,10 +2,10 @@ import { EventEmitter } from "node:events";
 import type { AgentEvent } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// In-process event bus. When the ElevenLabs phone agent calls our server tools
+// In-process event bus. When the ElevenLabs voice agent calls our server tools
 // (webhooks), each tool handler publishes an AgentEvent here; the /api/live SSE
-// endpoint relays them to the browser so the admin panel shows the LIVE PHONE
-// CALL's reasoning in real time. Singleton across the dev-server process.
+// endpoint relays them to the browser so the admin panel shows the live voice
+// session's reasoning in real time. Singleton across the dev-server process.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const g = globalThis as unknown as { __refundBus?: EventEmitter; __seq?: number };

@@ -2,9 +2,9 @@ import { TOOLS, RetryableToolError } from "@/lib/tools";
 import { publish } from "@/lib/events/bus";
 import { logConversation } from "@/lib/store/conversations";
 
-// Webhook endpoints for the ElevenLabs phone agent's SERVER tools. Each runs the
+// Webhook endpoints for the ElevenLabs voice agent's SERVER tools. Each runs the
 // same deterministic tool/policy logic as the browser agent, publishes the step to
-// the live feed (so the on-screen panel updates during the call), and returns the
+// the live feed (so the on-screen panel updates while you speak), and returns the
 // result JSON to ElevenLabs. URL: POST /api/agent-tools/<tool>
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ tool: string }
   try { body = (await req.json()) as Record<string, unknown>; } catch { /* empty body */ }
   const input = ((body.parameters as Record<string, unknown>) ?? body) ?? {};
 
-  publish("tool_call", `📞 → ${name}(${summarize(input)})`, { name, input, source: "phone" });
+  publish("tool_call", `🎙️ → ${name}(${summarize(input)})`, { name, input, source: "voice" });
 
   // Run with the same transient-retry behavior as the browser loop.
   let result: unknown;

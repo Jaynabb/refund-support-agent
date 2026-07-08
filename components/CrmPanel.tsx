@@ -94,7 +94,7 @@ export function CrmPanel() {
         </table>
       </div>
 
-      {/* Live conversation log (every text/voice/phone interaction is stored) */}
+      {/* Live conversation log (every text/voice interaction is stored) */}
       <div className="max-h-40 shrink-0 overflow-y-auto border-t border-slate-200">
         <div className="sticky top-0 flex items-center justify-between bg-slate-50 px-6 py-1.5">
           <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Conversations · live</span>
@@ -106,7 +106,7 @@ export function CrmPanel() {
           <ul className="px-6 py-1">
             {conversations.map((c) => (
               <li key={c.id} className="flex items-center gap-2 py-1 text-xs">
-                <span>{c.channel === "voice" ? "📞" : "💬"}</span>
+                <span>{c.channel === "voice" ? "🎙️" : "💬"}</span>
                 <span className="font-medium text-[#1D2333]">{c.customerName}</span>
                 <span className="text-slate-500">{c.orderId}{c.reason ? ` · ${c.reason}` : ""}</span>
                 <span className={"font-semibold " + (DEC_TXT[c.decision ?? "pending"] ?? "text-slate-400")}>
