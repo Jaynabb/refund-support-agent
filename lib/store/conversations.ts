@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { findOrder } from "@/lib/data/crm";
 import type { RefundDecision } from "@/lib/types";
@@ -24,15 +25,21 @@ export interface Conversation {
   updatedAt: number;
 }
 
-const DIR = join(process.cwd(), ".data");
+// On Vercel the project dir is read-only; only /tmp is writable. Fall back there
+// so serverless invocations (e.g. the phone agent's webhooks) can still log.
+const DIR = process.env.VERCEL ? join(tmpdir(), "refund-agent-data") : join(process.cwd(), ".data");
 const FILE = join(DIR, "conversations.json");
 
 function load(): Conversation[] {
   try { return JSON.parse(readFileSync(FILE, "utf8")) as Conversation[]; } catch { return []; }
 }
 function save(list: Conversation[]): void {
-  mkdirSync(DIR, { recursive: true });
-  writeFileSync(FILE, JSON.stringify(list, null, 2));
+  // Best-effort: the activity log is a nice-to-have, never worth 500-ing a refund
+  // over if the filesystem is read-only.
+  try {
+    mkdirSync(DIR, { recursive: true });
+    writeFileSync(FILE, JSON.stringify(list, null, 2));
+  } catch { /* read-only FS — skip persistence */ }
 }
 
 export function getConversations(): Conversation[] {
