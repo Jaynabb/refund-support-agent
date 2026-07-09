@@ -35,7 +35,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ tool: string }
     catch (err) {
       if (err instanceof RetryableToolError && attempt < 2) {
         attempt += 1;
-        publish("retry", `${name} transient error — retry ${attempt}/2`, { name, attempt });
+        publish("retry", `${err.message} Auto-retrying (attempt ${attempt}/2)…`, { name, attempt });
         await new Promise((r) => setTimeout(r, 300 * attempt));
         continue;
       }

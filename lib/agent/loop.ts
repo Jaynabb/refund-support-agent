@@ -64,7 +64,7 @@ async function runToolWithRetry(
         return { ok: false, error: message };
       }
       attempt += 1;
-      emit(makeEvent("retry", `${name} transient error — retry ${attempt}/${MAX_RETRIES}`, { name, attempt, message }));
+      emit(makeEvent("retry", `${message} Auto-retrying (attempt ${attempt}/${MAX_RETRIES})…`, { name, attempt, message }));
       await new Promise((r) => setTimeout(r, 400 * attempt));
     }
   }
