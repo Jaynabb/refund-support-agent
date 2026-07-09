@@ -1,9 +1,5 @@
 # Ava — Code Tour (presentation script)
 
-A self-contained walkthrough: each section is a "slide" with the real code snippet and
-what to say. Read it top to bottom — you don't need the live app or the editor open.
-Target ~3–4 minutes. Snippets are trimmed (`// …`) for clarity; file + purpose noted.
-
 ---
 
 ## Slide 1 — What this is
@@ -37,6 +33,34 @@ channel; the authority never does.
 **Say:** "Whether you type, speak, or call, every path converges on the same tools and the
 same engine. So behavior can't drift between channels — there's one definition of what a
 refund decision is."
+
+---
+
+## Slide 2.5 — Repository structure
+
+`app/` is the Next.js surface; all domain logic lives in `lib/`, split one job per folder.
+
+```
+├── app/                         # Next.js — HTTP routes + UI shell
+│   ├── page.tsx                 #   split-view console (chat | reasoning)
+│   └── api/                     #   agent (chat SSE) · agent-tools (voice/phone webhooks)
+│                                #   voice/signed-url · live (SSE feed) · crm · conversations
+├── lib/                         # DOMAIN LOGIC — one responsibility per folder
+│   ├── agent/loop.ts            #   orchestrator: hand-written Claude tool-use loop
+│   ├── tools/index.ts           #   the 4 tools (schema + handler) — shared by all channels
+│   ├── policy/engine.ts         #   THE deterministic decision (pure function)
+│   ├── data/                    #   crm.ts + policy.md
+│   ├── events/bus.ts            #   pub/sub for the live feed
+│   ├── store/conversations.ts   #   activity log
+│   └── types.ts
+├── components/                  # presentational React
+└── scripts/                     # ops: create-ava-agent.mjs · import-twilio-number.mjs
+```
+
+**Say:** "`app/` is the Next.js shell and API routes; all the real logic is in `lib/`, split
+by responsibility — orchestration, tools, the engine, data, events, storage. The engine is
+deliberately isolated as a pure function with no framework dependencies, so it's trivially
+testable and can't accidentally couple to the web layer."
 
 ---
 

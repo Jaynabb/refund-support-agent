@@ -77,7 +77,40 @@ orchestrator differs by channel; the *authority* never does.
 - **`components/`** — `ChatPanel` + `VoiceCall` (customer), `ReasoningPanel` (live admin
   timeline), `CrmPanel`, `PolicyDoc`.
 
-A full guided walkthrough is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+A full guided walkthrough is in [`ARCHITECTURE.md`](ARCHITECTURE.md); a
+presentation-style code tour with snippets is in [`CODE_TOUR.md`](CODE_TOUR.md).
+
+---
+
+## Repository structure
+
+Clean separation of concerns: `app/` is the Next.js surface, all domain logic lives in
+`lib/` split one-responsibility-per-folder, `components/` is UI, `scripts/` is ops. The
+policy engine is deliberately a **pure function with no framework dependencies** — trivially
+testable, and it can't accidentally couple to the web layer.
+
+```
+refund-agent/
+├── app/                         # Next.js App Router — HTTP surface + UI shell
+│   ├── page.tsx                 #   split-view console (chat | reasoning) + tabs
+│   └── api/                     #   backend routes (serverless functions)
+│       ├── agent/               #     POST → runs the Claude loop, streams SSE (chat)
+│       ├── agent-tools/[tool]/  #     webhooks ElevenLabs calls during voice/phone turns
+│       ├── voice/signed-url/    #     mints a short-lived ElevenLabs voice session URL
+│       ├── live/                #     SSE feed of voice/phone tool activity → panel
+│       ├── crm/                 #     read the 15-account CRM
+│       └── conversations/       #     read the activity log
+├── lib/                         # DOMAIN LOGIC — the system, one job per folder
+│   ├── agent/loop.ts            #   orchestrator: the hand-written Claude tool-use loop
+│   ├── tools/index.ts           #   the 4 tools (schema + handler) — shared by all channels
+│   ├── policy/engine.ts         #   THE deterministic decision (pure function)
+│   ├── data/                    #   crm.ts (mock orders) + policy.md (source of truth)
+│   ├── events/bus.ts            #   in-process pub/sub for the live feed
+│   ├── store/conversations.ts   #   the activity log
+│   └── types.ts                 #   shared TypeScript types
+├── components/                  # presentational React (ChatPanel, ReasoningPanel, …)
+└── scripts/                     # ops: create-ava-agent.mjs, import-twilio-number.mjs
+```
 
 ---
 
