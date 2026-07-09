@@ -249,15 +249,15 @@
 └─ store/conversations.ts    <span class="cm"># activity log</span>
 <span class="dir">components/</span>                  <span class="cm"># presentational React</span>
 <span class="dir">scripts/</span>                    <span class="cm"># create-ava-agent · import-twilio-number</span></div>
-        <ul class="notes"><li><b>app/</b> = the Next.js shell + API routes</li><li><b>lib/</b> = all the real logic, one job per folder</li><li>The engine is a pure function — no framework dependencies, easy to test</li></ul>
+        <ul class="notes"><li>Everything's split up so each part has <b>one job</b></li><li>The refund rules live in their own separate file</li><li>Easy to find, easy to trust</li></ul>
       </div>
     </section>
 
     <!-- 4 -->
     <section class="slide">
       <div class="inner">
-        <div class="eyebrow"><span class="num">04</span> · The authority</div>
-        <h2>The decision is a pure function</h2>
+        <div class="eyebrow"><span class="num">04</span> · The rules</div>
+        <h2>The rules make the call, not the AI</h2>
         <div class="code">
           <div class="head"><span class="fdot"></span> lib/policy/engine.ts</div>
 <pre><span class="cmt">// no AI in the decision — order in, decision + audit trail out</span>
@@ -274,7 +274,7 @@ export function <span class="em">evaluateRefund</span>(order, _reason, _history)
 }</pre>
         </div>
         <a class="filelink" href="https://github.com/Jaynabb/refund-support-agent/blob/main/lib/policy/engine.ts" target="_blank" rel="noopener">View engine.ts on GitHub ↗</a>
-        <ul class="notes"><li>Pure function — <b>no AI in the decision</b></li><li>Checks 4 gates: delivered · not already refunded · 30-day window · refundable items</li><li>Returns every rule with a pass/fail reason → fully auditable</li><li>Same order always gives the same answer — that's what lets Ava hold the line</li></ul>
+        <ul class="notes"><li>A fixed set of <b>rules decides every refund</b> — not the AI</li><li>Like: is it within 30 days? was it already refunded?</li><li>Same order always gets the same answer — no guessing</li></ul>
       </div>
     </section>
 
