@@ -14,6 +14,11 @@ streams live to an admin reasoning panel.
 > even the refund tool re-verifies policy before moving money. **The model is the
 > communicator; the engine is the authority.**
 
+![Ava's admin reasoning panel — a refund streamed step by step: order lookup, the rule-by-rule policy audit, the APPROVE decision, a transparently-retried gateway blip, and the confirmation.](docs/reasoning-panel.png)
+
+*Every decision is auditable: the reasoning panel streams each tool call, the rule-by-rule
+policy check, retries, and the final decision in real time.*
+
 ---
 
 ## What it does
