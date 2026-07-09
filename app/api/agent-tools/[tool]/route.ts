@@ -25,7 +25,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ tool: string }
   try { body = (await req.json()) as Record<string, unknown>; } catch { /* empty body */ }
   const input = ((body.parameters as Record<string, unknown>) ?? body) ?? {};
 
-  publish("tool_call", `🎙️ → ${name}(${summarize(input)})`, { name, input, source: "voice" });
+  await publish("tool_call", `🎙️ → ${name}(${summarize(input)})`, { name, input, source: "voice" });
 
   // Run with the same transient-retry behavior as the browser loop.
   let result: unknown;
@@ -35,12 +35,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ tool: string }
     catch (err) {
       if (err instanceof RetryableToolError && attempt < 2) {
         attempt += 1;
-        publish("retry", `${err.message} Auto-retrying (attempt ${attempt}/2)…`, { name, attempt });
+        await publish("retry", `${err.message} Auto-retrying (attempt ${attempt}/2)…`, { name, attempt });
         await new Promise((r) => setTimeout(r, 300 * attempt));
         continue;
       }
       const msg = err instanceof Error ? err.message : String(err);
-      publish("tool_error", `${name} failed: ${msg}`, { name });
+      await publish("tool_error", `${name} failed: ${msg}`, { name });
       return Response.json({ ok: false, error: msg });
     }
   }
@@ -53,17 +53,17 @@ export async function POST(req: Request, ctx: { params: Promise<{ tool: string }
   if (name === "lookup_order" && r.found) {
     // Log the inquiry as soon as Ava pulls the order — the CRM row appears live mid-call.
     logConversation({ id: convId, channel: "voice", orderId, decision: "pending" });
-    publish("tool_result", `← ${name} found`, { name, result: r });
+    await publish("tool_result", `← ${name} found`, { name, result: r });
   } else if (name === "check_refund_policy" && r.found) {
-    publish("policy_check", `policy → ${String(r.decision).toUpperCase()} — ${r.summary}`, r);
-    publish("decision", String(r.decision).toUpperCase(), { decision: r.decision, summary: r.summary });
+    await publish("policy_check", `policy → ${String(r.decision).toUpperCase()} — ${r.summary}`, r);
+    await publish("decision", String(r.decision).toUpperCase(), { decision: r.decision, summary: r.summary });
     logConversation({
       id: convId, channel: "voice", orderId,
       reason: String((input as { reason?: unknown }).reason ?? ""),
       decision: r.decision as never, amount: Number(r.eligibleAmount ?? 0),
     });
   } else {
-    publish("tool_result", `← ${name} ${resultLabel(name, r)}`, { name, result: r });
+    await publish("tool_result", `← ${name} ${resultLabel(name, r)}`, { name, result: r });
   }
 
   return Response.json(result);
