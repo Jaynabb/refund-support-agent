@@ -82,8 +82,14 @@ export async function* runAgentTurn(history: ChatMessage[], conversationId?: str
       const response = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 1024,
-        // Cache the stable system prefix (policy + instructions) across turns.
-        system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
+        // Ground the model in the actual policy text (same file the engine mirrors) so
+        // its explanations stay accurate; the engine still makes the decision.
+        // Cache this stable system prefix (instructions + policy) across turns.
+        system: [{
+          type: "text",
+          text: `${SYSTEM}\n\n# Store refund policy (reference — the engine enforces it)\n\n${POLICY}`,
+          cache_control: { type: "ephemeral" },
+        }],
         tools: TOOL_DEFINITIONS,
         messages,
       });
