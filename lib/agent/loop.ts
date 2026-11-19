@@ -145,8 +145,8 @@ export async function* runAgentTurn(history: ChatMessage[], conversationId?: str
     }
     yield makeEvent("error", "Agent stopped: exceeded step limit.", {});
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    yield makeEvent("error", `Agent error: ${message}`, { error: message });
+    console.error("[agent/loop]", err);
+    yield makeEvent("error", "Agent error — please try again.", {});
   }
 }
 

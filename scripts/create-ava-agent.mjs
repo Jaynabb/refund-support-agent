@@ -4,7 +4,9 @@
 //
 // Usage:  node scripts/create-ava-agent.mjs <PUBLIC_BASE_URL>
 //   e.g.  node scripts/create-ava-agent.mjs https://abc123.ngrok-free.app
-// Reads ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID from .env.local.
+// Reads ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID and AGENT_TOOLS_SECRET from .env.local.
+// AGENT_TOOLS_SECRET is sent as a header on every tool call; the app rejects calls
+// without it, so set the same value in the deployed app's environment.
 
 import { readFileSync } from "node:fs";
 
@@ -20,7 +22,11 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
 );
 const KEY = env.ELEVENLABS_API_KEY;
-const VOICE = env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
+const VOICE = env.ELEVENLABS_VOICE_ID;
+const TOOLS_SECRET = env.AGENT_TOOLS_SECRET;
+for (const [k, v] of Object.entries({ ELEVENLABS_API_KEY: KEY, ELEVENLABS_VOICE_ID: VOICE, AGENT_TOOLS_SECRET: TOOLS_SECRET })) {
+  if (!v) { console.error(`Missing ${k} in .env.local`); process.exit(1); }
+}
 
 const SYSTEM = `You are Ava, a warm, friendly voice support agent for Acme Store, helping customers with refunds over the phone. You sound like a real person on a call — calm, natural, and unhurried.
 
@@ -53,6 +59,7 @@ const tool = (name, description, seg, properties, required) => ({
   api_schema: {
     url: `${BASE}/api/agent-tools/${seg}`,
     method: "POST",
+    request_headers: { "x-agent-tools-secret": TOOLS_SECRET },
     request_body_schema: { type: "object", properties, required },
   },
 });

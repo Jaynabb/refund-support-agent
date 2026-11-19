@@ -11,7 +11,10 @@ export async function GET() {
     `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${agentId}`,
     { headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY ?? "" } },
   );
-  if (!res.ok) return Response.json({ error: await res.text() }, { status: res.status });
+  if (!res.ok) {
+    console.error("[voice/signed-url] ElevenLabs responded", res.status, await res.text());
+    return Response.json({ error: "Voice session unavailable" }, { status: 502 });
+  }
   const data = (await res.json()) as { signed_url?: string };
   return Response.json({ signedUrl: data.signed_url });
 }

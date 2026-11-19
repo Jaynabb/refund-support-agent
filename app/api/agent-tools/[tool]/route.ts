@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { TOOLS, RetryableToolError } from "@/lib/tools";
 import { publish } from "@/lib/events/bus";
 import { logConversation } from "@/lib/store/conversations";
@@ -16,13 +17,31 @@ const TOOL_MAP: Record<string, string> = {
   "issue-refund": "issue_refund",
 };
 
+// These endpoints can issue refunds, so they are never open to the public internet.
+// The ElevenLabs agent is provisioned (scripts/create-ava-agent.mjs) to send the shared
+// secret on every tool call; anything without it is rejected before any logic runs.
+function authorized(req: Request): boolean {
+  const expected = process.env.AGENT_TOOLS_SECRET;
+  if (!expected) return false; // unset secret = endpoints disabled, never "open"
+  const got = req.headers.get("x-agent-tools-secret") ?? "";
+  const a = Buffer.from(got), b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+const MAX_BODY_BYTES = 4_096;
+
 export async function POST(req: Request, ctx: { params: Promise<{ tool: string }> }) {
+  if (!authorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
   const { tool } = await ctx.params;
   const name = TOOL_MAP[tool];
   if (!name) return Response.json({ error: `unknown tool ${tool}` }, { status: 404 });
 
   let body: Record<string, unknown> = {};
-  try { body = (await req.json()) as Record<string, unknown>; } catch { /* empty body */ }
+  try {
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_BYTES) return Response.json({ error: "payload too large" }, { status: 413 });
+    body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+  } catch { /* empty or malformed body */ }
   const input = ((body.parameters as Record<string, unknown>) ?? body) ?? {};
 
   await publish("tool_call", `🎙️ → ${name}(${summarize(input)})`, { name, input, source: "voice" });

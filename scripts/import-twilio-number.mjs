@@ -7,9 +7,9 @@
 //
 // Reads:
 //   ELEVENLABS_API_KEY        from ./.env.local
-//   TWILIO_ACCOUNT_SID/TOKEN  from process.env (source them from AIOS/.env)
+//   TWILIO_ACCOUNT_SID/TOKEN, PHONE_NUMBER (E.164) from process.env
 //
-// Usage:  TWILIO_ACCOUNT_SID=.. TWILIO_AUTH_TOKEN=.. node scripts/import-twilio-number.mjs
+// Usage:  TWILIO_ACCOUNT_SID=.. TWILIO_AUTH_TOKEN=.. PHONE_NUMBER=+1.. node scripts/import-twilio-number.mjs
 
 import { readFileSync } from "node:fs";
 
@@ -23,9 +23,9 @@ const EL_KEY = env.ELEVENLABS_API_KEY;
 const AGENT_ID = env.ELEVENLABS_AGENT_ID;
 const SID = process.env.TWILIO_ACCOUNT_SID;
 const TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const NUMBER = process.env.PHONE_NUMBER || "+18669354129";
+const NUMBER = process.env.PHONE_NUMBER;
 
-for (const [k, v] of Object.entries({ ELEVENLABS_API_KEY: EL_KEY, ELEVENLABS_AGENT_ID: AGENT_ID, TWILIO_ACCOUNT_SID: SID, TWILIO_AUTH_TOKEN: TOKEN })) {
+for (const [k, v] of Object.entries({ ELEVENLABS_API_KEY: EL_KEY, ELEVENLABS_AGENT_ID: AGENT_ID, TWILIO_ACCOUNT_SID: SID, TWILIO_AUTH_TOKEN: TOKEN, PHONE_NUMBER: NUMBER })) {
   if (!v) { console.error(`Missing ${k}`); process.exit(1); }
 }
 

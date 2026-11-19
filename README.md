@@ -158,6 +158,8 @@ Type a request like *"refund for ORD-1001, it's defective"*, or tap the mic to t
 | `ANTHROPIC_API_KEY` | **Required.** The chat agent's brain (tool-use loop). |
 | `ANTHROPIC_MODEL` | Optional. Default `claude-sonnet-4-6`; set `claude-opus-4-8` for max reasoning. |
 | `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID` / `ELEVENLABS_AGENT_ID` | Voice + phone (ConvAI). |
+| `AGENT_TOOLS_SECRET` | **Required for voice/phone.** Shared secret the ConvAI agent sends on every webhook tool call; `/api/agent-tools/*` rejects requests without it. Generate with `openssl rand -hex 32`. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional. Shared event bus so phone-call tool activity reaches the live panel across serverless instances. Falls back to in-process locally. |
 
 ### Voice & phone setup
 
@@ -169,9 +171,20 @@ TWILIO_ACCOUNT_SID=.. TWILIO_AUTH_TOKEN=.. node scripts/import-twilio-number.mjs
 ```
 
 Deployed on Vercel; the ConvAI agent's tools point at the production URL so the phone
-line works 24/7. Serverless note: the deployed reasoning panel reflects chat/in-browser
-voice; phone-call tool activity runs in separate serverless instances and isn't relayed
-to the in-memory live feed (a shared pub/sub would close that gap).
+line works 24/7. With Redis configured, phone-call tool activity is relayed across
+serverless instances to the live panel; without it, the panel reflects chat and
+in-browser voice only.
+
+### Security notes
+
+- The webhook tool endpoints (`/api/agent-tools/*`) can trigger refunds, so they require
+  the `x-agent-tools-secret` header (constant-time compared) and refuse to run when the
+  secret is unset. The provisioning script installs the header on the ConvAI agent.
+- `/api/agent` validates and bounds its input (message count, length, roles,
+  conversation id) before anything reaches the model.
+- Upstream provider errors are logged server-side and never relayed to the browser.
+- All customer data is mock (`lib/data/crm.ts`, `@example.com` addresses). No secrets
+  are committed; copy `.env.example` to `.env.local`.
 
 ---
 
